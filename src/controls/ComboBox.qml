@@ -147,8 +147,17 @@ Control {
             id: popupItems
             active: popup.ready
             MenuItem {
-                text: popup.textRole === "" ? modelData :
-                      (model[popup.textRole] || "")
+                text: {
+                    if (popup.textRole === '') {
+                        return modelData;
+                    }
+
+                    if (popupItems.model.constructor === Array) {
+                        return modelData[popup.textRole] || "";
+                    }
+
+                    return model[popup.textRole] || "";
+                }
                 checkable: true
                 exclusiveGroup: eg
             }
@@ -160,12 +169,21 @@ Control {
             if (!ready || !model)
                 return;
 
-            var modelMayHaveRoles = model["get"] !== undefined
+            var get = model['get'];
+            if (!get && model.constructor === Array)
+            {
+                get = function(i)
+                {
+                    return model[i];
+                }
+            }
+
+            var modelMayHaveRoles = get !== undefined
             textRole = initialTextRole
-            if (textRole === "" && modelMayHaveRoles && model.get(0)) {
+            if (textRole === "" && modelMayHaveRoles && get(0)) {
                 // No text role set, check whether model has a suitable role
                 // If 'text' is found, or there's only one role, pick that.
-                var listElement = model.get(0)
+                var listElement = get(0)
                 var roleName = ""
                 var roleCount = 0
                 for (var role in listElement) {
